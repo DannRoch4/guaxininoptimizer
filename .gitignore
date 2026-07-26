@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+guaxinim_revert_log.json
+guaxinim_auto.log
+
+# artefatos de build do PyInstaller — carregam caminhos absolutos da maquina
+# que gerou o .exe (ex: usuario do Windows), nunca devem ir pro repo
+build/
+dist/
+*.spec
+
+# notas internas de desenvolvimento — nao vao pro repo publico
+NOTAS_INTERNAS.md
