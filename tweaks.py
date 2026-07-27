@@ -412,6 +412,11 @@ GAMER_TWEAKS = [
           desc="Remove a aceleracao do ponteiro do mouse do Windows, deixando o movimento 1:1 — "
                "tweak classico pra jogos competitivos de mira (FPS). So afeta o seu usuario.",
           hive="HKCU", get_state=_mouse_precision_get_state, set_state=_mouse_precision_set_state),
+    dict(id="disable_transparency", display="Desativar efeitos de transparencia", risk="safe",
+          desc="Desliga a transparencia da barra de tarefas, menu Iniciar e janelas. Reduz um pouco "
+               "o uso de GPU/composicao — ganho pequeno mas real em PCs mais fracos.",
+          hive="HKCU", path=r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+          value_name="EnableTransparency", on_value=0),
 ]
 
 

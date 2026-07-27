@@ -111,7 +111,26 @@ def _run_ps(script, timeout=30):
     )
 
 
-def is_installed(package_id):
+def list_installed_appx_names():
+    """Uma unica chamada de PowerShell que lista TODOS os pacotes AppX instalados de uma vez
+    — usada pelo scan em lote (ver is_installed com installed_names). Abrir um powershell.exe
+    novo pra cada um dos ~47 itens curados (isolado, sem essa lista) custa varias centenas de
+    ms cada um; em sequencia isso deixava a aba Bloatware parecendo travada por dezenas de
+    segundos toda vez que abria."""
+    try:
+        result = _run_ps("(Get-AppxPackage).Name -join '|'")
+        raw = result.stdout.strip()
+        return raw.split("|") if raw else []
+    except Exception:
+        return []
+
+
+def is_installed(package_id, installed_names=None):
+    """Se installed_names for passado (lista ja obtida via list_installed_appx_names), checa
+    localmente sem abrir PowerShell nenhum — MUITO mais rapido pra checar varios de uma vez.
+    Sem isso, faz uma chamada isolada (ok pra checar so 1 item, ex: depois de um toggle)."""
+    if installed_names is not None:
+        return any(name.startswith(package_id) for name in installed_names)
     try:
         result = _run_ps(f"(Get-AppxPackage -Name '{package_id}*' | Select-Object -First 1).Name")
         return bool(result.stdout.strip())

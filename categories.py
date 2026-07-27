@@ -64,6 +64,14 @@ def _detect_epic_installed():
     return _exists(os.path.join(LOCALAPPDATA, "EpicGamesLauncher"))
 
 
+def _detect_discord_installed():
+    return _exists(os.path.join(APPDATA, "discord"))
+
+
+def _detect_spotify_installed():
+    return _exists(os.path.join(LOCALAPPDATA, "Spotify"))
+
+
 def _detect_nvidia_installed():
     return _exists(os.path.join(PROGRAMDATA, "NVIDIA Corporation")) or _exists(
         r"C:\Program Files\NVIDIA Corporation"
@@ -233,19 +241,37 @@ def get_categories():
         ),
         dict(
             id="windows_old", group="sistema",
-            name="Windows.old (instalacao anterior do Windows)",
-            description="Copia da instalacao anterior do Windows apos upgrade. So existe por um "
-                         "tempo limitado. Depois de apagar nao da mais pra voltar a versao anterior.",
+            name="Windows.old e pastas de backup de upgrade",
+            description="Copia da instalacao anterior do Windows apos upgrade, mais as pastas "
+                         "temporarias que o instalador deixa para tras ($WINDOWS.~BT/$WINDOWS.~WS). "
+                         "So existem por um tempo limitado. Depois de apagar nao da mais pra voltar "
+                         "a versao anterior.",
             risk="cuidado", admin=True, default=False,
-            kind="windows_old", paths=[os.path.join(SYSTEMDRIVE, "Windows.old")],
+            kind="windows_old",
+            paths=[
+                os.path.join(SYSTEMDRIVE, "Windows.old"),
+                os.path.join(SYSTEMDRIVE, "$WINDOWS.~BT"),
+                os.path.join(SYSTEMDRIVE, "$WINDOWS.~WS"),
+            ],
+        ),
+        dict(
+            id="font_cache", group="sistema",
+            name="Cache de fontes do Windows",
+            description="Cache do servico de fontes (FontCache). E reconstruido automaticamente "
+                         "na proxima vez que o Windows precisar renderizar fontes.",
+            risk="safe", admin=True, default=True,
+            kind="font_cache",
+            paths=[os.path.join(WINDIR, r"ServiceProfiles\LocalService\AppData\Local\FontCache")],
         ),
     ]
 
     if _detect_nvidia_installed():
         cats.append(dict(
             id="nvidia_cache", group="jogos_drivers",
-            name="Cache de drivers NVIDIA (DXCache/GLCache/NV_Cache)",
-            description="Cache de compilacao de shaders do driver NVIDIA. Recriado automaticamente.",
+            name="Cache e instaladores residuais da NVIDIA (DXCache/GLCache/NV_Cache)",
+            description="Cache de compilacao de shaders do driver NVIDIA (recriado automaticamente) "
+                         "mais arquivos extraidos de instaladores de driver que ja foram aplicados "
+                         "(pasta C:\\NVIDIA) e o cache de downloads do GeForce Experience.",
             risk="safe", admin=False, default=True,
             kind="dir_contents",
             paths=[
@@ -253,6 +279,8 @@ def get_categories():
                 os.path.join(LOCALAPPDATA, r"NVIDIA\GLCache"),
                 os.path.join(PROGRAMDATA, r"NVIDIA Corporation\NV_Cache"),
                 os.path.join(TEMP, "NVIDIA Corporation"),
+                os.path.join(PROGRAMDATA, r"NVIDIA Corporation\Downloader"),
+                os.path.join(SYSTEMDRIVE, "NVIDIA"),
             ],
         ))
 
@@ -290,6 +318,33 @@ def get_categories():
             paths=[
                 os.path.join(LOCALAPPDATA, r"EpicGamesLauncher\Saved\webcache"),
                 os.path.join(LOCALAPPDATA, r"EpicGamesLauncher\Saved\Logs"),
+            ],
+        ))
+
+    if _detect_discord_installed():
+        cats.append(dict(
+            id="discord_cache", group="jogos_drivers",
+            name="Cache do Discord",
+            description="Cache web/imagens do Discord. Nao mexe em configuracoes ou historico de conversas.",
+            risk="safe", admin=False, default=True,
+            kind="dir_contents",
+            paths=[
+                os.path.join(APPDATA, r"discord\Cache"),
+                os.path.join(APPDATA, r"discord\Code Cache"),
+                os.path.join(APPDATA, r"discord\GPUCache"),
+            ],
+        ))
+
+    if _detect_spotify_installed():
+        cats.append(dict(
+            id="spotify_cache", group="jogos_drivers",
+            name="Cache do Spotify",
+            description="Cache de musicas/dados offline do Spotify. Nao mexe na conta ou playlists.",
+            risk="safe", admin=False, default=True,
+            kind="dir_contents",
+            paths=[
+                os.path.join(LOCALAPPDATA, r"Spotify\Storage"),
+                os.path.join(LOCALAPPDATA, r"Spotify\Data"),
             ],
         ))
 

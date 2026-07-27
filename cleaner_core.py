@@ -173,6 +173,8 @@ def scan_category(cat):
         return scan_dir_contents(cat["paths"])
     if kind == "windows_old":
         return scan_dir_contents(cat["paths"])
+    if kind == "font_cache":
+        return scan_dir_contents(cat["paths"])
     if kind == "dism_cleanup":
         return scan_winsxs_reclaimable()
     if kind == "system_restore":
@@ -269,6 +271,30 @@ def _clean_wu_cache(paths, log=None):
     return freed
 
 
+def _clean_font_cache(paths, log=None):
+    """Para o servico FontCache, limpa a pasta, e reinicia o servico (mesmo padrao do cache
+    do Windows Update — o arquivo fica em uso enquanto o servico esta rodando)."""
+    stopped = False
+    try:
+        subprocess.run(["net", "stop", "FontCache"], capture_output=True, timeout=30,
+                        creationflags=subprocess.CREATE_NO_WINDOW)
+        stopped = True
+    except Exception as exc:
+        if log:
+            log(f"  nao consegui parar o servico FontCache: {exc}")
+    try:
+        freed = _delete_dir_contents(paths, log=log)
+    finally:
+        if stopped:
+            try:
+                subprocess.run(["net", "start", "FontCache"], capture_output=True, timeout=30,
+                                creationflags=subprocess.CREATE_NO_WINDOW)
+            except Exception as exc:
+                if log:
+                    log(f"  nao consegui reiniciar o servico FontCache: {exc}")
+    return freed
+
+
 def _dism_cleanup(log=None):
     """Roda o DISM StartComponentCleanup e devolve stdout para log (tamanho exato so se sabe depois)."""
     try:
@@ -353,6 +379,8 @@ def clean_category(cat, log=None):
         return _clean_wu_cache(cat["paths"], log=log)
     if kind == "windows_old":
         return _remove_windows_old(cat["paths"], log=log)
+    if kind == "font_cache":
+        return _clean_font_cache(cat["paths"], log=log)
     if kind == "dism_cleanup":
         ok = _dism_cleanup(log=log)
         return 0 if not ok else -1  # -1 sinaliza "sucesso mas tamanho so sera visto pela diferenca real de disco"

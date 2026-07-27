@@ -6,6 +6,6 @@ ajuda demais quando alguem reporta um problema."""
 
 MAJOR = 1
 MINOR = 0
-BUILD = 2
+BUILD = 4
 
 VERSION = f"{MAJOR}.{MINOR}.{BUILD}"
